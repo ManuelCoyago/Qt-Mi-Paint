@@ -20,6 +20,8 @@ Principal::Principal(QWidget *parent)
     mColor = Qt::black;
     mAncho = DEFAULT_ANCHO;
     mNumLineas = 0;
+    mPuedeDibujarRectangulo = false;
+    mPuedeDibujarLinea = false;
 }
 
 Principal::~Principal()
@@ -31,58 +33,112 @@ Principal::~Principal()
 
 void Principal::paintEvent(QPaintEvent *event)
 {
-    // Crear el painter de la ventana principal
+
     QPainter painter(this);
+
     // Dibujar la imagen
     painter.drawImage(0, 0, *mImagen);
-    // Acepatr el evento
+
+    if (mPuedeDibujarLinea)
+    {
+        // Crear un pincel y establecer atributos para el dibujo de líneas
+        QPen pincel;
+        pincel.setColor(mColor);
+        pincel.setWidth(mAncho);
+        painter.setPen(pincel);
+        painter.drawLine(mInicialLinea, mFinalLinea);
+    }
+    else if (mPuedeDibujarRectangulo)
+    {
+        // Crear un pincel y establecer atributos para el dibujo de rectángulos
+        QPen pincel;
+        pincel.setColor(mColor);
+        pincel.setWidth(mAncho);
+        painter.setPen(pincel);
+        painter.drawRect(mRectangulo);
+    }
+
     event->accept();
 }
 
-void Principal::mousePressEvent(QMouseEvent *event)
+
+void Principal::mousePressEvent(QMouseEvent *event) //
 {
-    // Levanta la bandera (para que se pueda dibujar)
-    mPuedeDibujar = true;
-    // Captura la posición (punto x,y) del mouse
-    mInicial = event->pos();
-    // Acepta el evento
-    event->accept();
-}
+    if (mPuedeDibujarLinea)
+        {
+            // Iniciar el dibujo de líneas
+            mPuedeDibujar = true;
+            mInicialLinea = event->pos();
+        }
+        else if (mPuedeDibujarRectangulo)
+        {
+            // Iniciar el dibujo de rectángulos
+            mRectangulo.setTopLeft(event->pos());
+        }
+
+        event->accept();
+    }
+
 
 void Principal::mouseMoveEvent(QMouseEvent *event)
 {
-    // Validar si se puede dibujar
-    if ( !mPuedeDibujar ) {
-        // Acepta el evento
-        event->accept();
-        // Salir del método
-        return;
-    }
-    // Capturar el punto a donde se mueve el mouse
-    mFinal = event->pos();
-    // Crear un pincel y establecer atributos
-    QPen pincel;
-    pincel.setColor(mColor);
-    pincel.setWidth(mAncho);
-    // Dibujar una linea
-    mPainter->setPen(pincel);
-    mPainter->drawLine(mInicial, mFinal);
-    // Mostrar el número de líneas en la barra de estado
-    ui->statusbar->showMessage("Número de líneas: " + QString::number(++mNumLineas));
-    // Actualizar la interfaz (repinta con paintEvent)
-    update();
-    // actualizar el punto inicial
-    mInicial = mFinal;
+ if(mPuedeDibujarLinea){
+     // Validar si se puede dibujar
+     if ( !mPuedeDibujar ) {
+         // Acepta el evento
+         event->accept();
+         // Salir del método
+         return;
+     }
+     // Capturar el punto a donde se mueve el mouse
+     mFinal = event->pos();
+     // Crear un pincel y establecer atributos
+     QPen pincel;
+     pincel.setColor(mColor);
+     pincel.setWidth(mAncho);
+     // Dibujar una linea
+     mPainter->setPen(pincel);
+     mPainter->drawLine(mInicial, mFinal);
+     // Mostrar el número de líneas en la barra de estado
+     ui->statusbar->showMessage("Número de líneas: " + QString::number(++mNumLineas));
+     // Actualizar la interfaz (repinta con paintEvent)
+     update();
+     // actualizar el punto inicial
+     mInicial = mFinal;
+     event->accept();
+ }else if (mPuedeDibujarRectangulo)
+ {
+     // Dibujar rectángulos
+     mRectangulo.setBottomRight(event->pos());
+
+     // Actualizar la interfaz (repinta con paintEvent)
+     update();
+ }
+
+ event->accept();
 }
+
+
 
 void Principal::mouseReleaseEvent(QMouseEvent *event)
 {
-    // Bajar la bandera (no se puede dibujar)
-    mPuedeDibujar = false;
-    // Aceptar el vento
-    event->accept();
+    if (mPuedeDibujarLinea)
+    {
+        // Finalizar el dibujo de líneas
+        mPuedeDibujar = false;
+    }
+    else if (mPuedeDibujarRectangulo)
+    {
+        // Finalizar el dibujo de rectángulos
+        mPuedeDibujarRectangulo = false;
 
+        // Actualizar la interfaz (repinta con paintEvent)
+        update();
+    }
+
+    event->accept();
 }
+
 
 
 void Principal::on_actionAncho_triggered()
@@ -136,3 +192,25 @@ void Principal::on_actionGuardar_triggered()
         }
     }
 }
+
+void Principal::on_actionRect_nculos_triggered()
+{
+    mPuedeDibujarLinea = false;
+    mPuedeDibujarRectangulo = true;
+    //mPuedeDibujar = true; // Agregar esta línea para permitir dibujar el rectángulo
+}
+
+void Principal::on_actionLineas_triggered()
+{
+        mPuedeDibujarLinea = true;
+
+
+}
+
+void Principal::on_actionCircunferencias_triggered()
+{
+
+}
+
+
+
